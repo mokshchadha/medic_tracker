@@ -1,6 +1,6 @@
 // components/PatientCard.tsx
 import React from 'react';
-import { Calendar, Phone, MapPin, Edit2, Trash2, StickyNote, Clock, X } from 'lucide-react';
+import { Calendar, Phone, MapPin, Edit2, Trash2, StickyNote, Clock, X, FileText } from 'lucide-react';
 import { PatientCardProps } from '../types'
 
 const PatientCard: React.FC<PatientCardProps> = ({ 
@@ -26,9 +26,9 @@ const PatientCard: React.FC<PatientCardProps> = ({
             <button
               onClick={() => onViewNotes(patient)}
               className="text-green-600 hover:text-green-800"
-              title="View Notes"
+              title="View Handwritten Notes"
             >
-              <StickyNote className="w-4 h-4" />
+              <FileText className="w-4 h-4" />
             </button>
             <button
               onClick={() => onEdit(patient)}
@@ -61,30 +61,31 @@ const PatientCard: React.FC<PatientCardProps> = ({
           </p>
         )}
 
-        {/* Notes Summary */}
+        {/* Handwritten Notes Preview */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-gray-700">Notes</h4>
+            <h4 className="text-sm font-medium text-gray-700">Handwritten Notes</h4>
             <button
               onClick={() => onViewNotes(patient)}
               className="text-xs text-green-600 hover:text-green-800"
             >
-              {patient.notes?.length > 0 ? `View ${patient.notes.length}` : '+ Add Note'}
+              {patient.handwrittenNotes ? 'View Notes' : '+ Add Notes'}
             </button>
           </div>
           
-          {patient.notes && patient.notes.length > 0 ? (
-            <div className="bg-yellow-50 p-2 rounded text-xs">
-              <div className="font-medium text-yellow-800 mb-1">
-                Latest: {new Date(patient.notes[patient.notes.length - 1].createdAt).toLocaleDateString()}
-              </div>
-              <div className="text-yellow-700 line-clamp-2">
-                {patient.notes[patient.notes.length - 1].content.substring(0, 60)}
-                {patient.notes[patient.notes.length - 1].content.length > 60 && '...'}
-              </div>
+          {patient.handwrittenNotes ? (
+            <div className="bg-yellow-50 p-2 rounded border border-yellow-200">
+              <img 
+                src={patient.handwrittenNotes} 
+                alt="Handwritten notes preview" 
+                className="w-full h-16 object-contain border border-yellow-300 rounded cursor-pointer hover:opacity-80"
+                onClick={() => onViewNotes(patient)}
+                title="Click to view full notes"
+              />
+              <p className="text-xs text-yellow-700 mt-1">Click to view full notes</p>
             </div>
           ) : (
-            <p className="text-xs text-gray-500 italic">No notes added</p>
+            <p className="text-xs text-gray-500 italic">No handwritten notes added</p>
           )}
         </div>
 
@@ -134,6 +135,5 @@ const PatientCard: React.FC<PatientCardProps> = ({
     </div>
   );
 };
-
 
 export default PatientCard

@@ -1,9 +1,25 @@
-// hooks/usePatients.ts
-import { useState } from 'react';
-import { Patient, PatientFormData, Medicine, UsePatientReturn, MedicineAssignment, Note } from '../types';
+// hooks/usePatient.ts
+import { useState, useEffect } from 'react';
+import { Patient, PatientFormData, Medicine, UsePatientReturn, MedicineAssignment } from '../types';
+import LocalStorageService from '../services/LocalStorageService';
 
 const usePatients = (): UsePatientReturn => {
   const [patients, setPatients] = useState<Patient[]>([]);
+
+  // Load patients from localStorage on component mount
+  useEffect(() => {
+    if (LocalStorageService.isLocalStorageAvailable()) {
+      const savedPatients = LocalStorageService.getPatients();
+      setPatients(savedPatients);
+    }
+  }, []);
+
+  // Sync patients to localStorage whenever patients state changes
+  useEffect(() => {
+    if (LocalStorageService.isLocalStorageAvailable() && patients.length >= 0) {
+      LocalStorageService.savePatients(patients);
+    }
+  }, [patients]);
 
   const addPatient = (patientData: PatientFormData): void => {
     const newPatient: Patient = {
@@ -11,17 +27,39 @@ const usePatients = (): UsePatientReturn => {
       ...patientData,
       createdAt: new Date().toLocaleDateString()
     };
-    setPatients(prev => [...prev, newPatient]);
+    
+    setPatients(prev => {
+      const updatedPatients = [...prev, newPatient];
+      // Save to localStorage immediately
+      if (LocalStorageService.isLocalStorageAvailable()) {
+        LocalStorageService.savePatients(updatedPatients);
+      }
+      return updatedPatients;
+    });
   };
 
   const updatePatient = (updatedPatient: Patient): void => {
-    setPatients(prev => prev.map(p => 
-      p.id === updatedPatient.id ? updatedPatient : p
-    ));
+    setPatients(prev => {
+      const updatedPatients = prev.map(p => 
+        p.id === updatedPatient.id ? updatedPatient : p
+      );
+      // Save to localStorage immediately
+      if (LocalStorageService.isLocalStorageAvailable()) {
+        LocalStorageService.savePatients(updatedPatients);
+      }
+      return updatedPatients;
+    });
   };
 
   const deletePatient = (patientId: number): void => {
-    setPatients(prev => prev.filter(p => p.id !== patientId));
+    setPatients(prev => {
+      const updatedPatients = prev.filter(p => p.id !== patientId);
+      // Save to localStorage immediately
+      if (LocalStorageService.isLocalStorageAvailable()) {
+        LocalStorageService.savePatients(updatedPatients);
+      }
+      return updatedPatients;
+    });
   };
 
   const assignMedicine = (
@@ -43,74 +81,63 @@ const usePatients = (): UsePatientReturn => {
       assignedDate: new Date().toLocaleDateString()
     };
 
-    setPatients(prev => prev.map(p => {
-      if (p.id === patientId) {
-        return {
-          ...p,
-          assignedMedicines: [...p.assignedMedicines, newAssignment]
-        };
+    setPatients(prev => {
+      const updatedPatients = prev.map(p => {
+        if (p.id === patientId) {
+          return {
+            ...p,
+            assignedMedicines: [...p.assignedMedicines, newAssignment]
+          };
+        }
+        return p;
+      });
+      
+      // Save to localStorage immediately
+      if (LocalStorageService.isLocalStorageAvailable()) {
+        LocalStorageService.savePatients(updatedPatients);
       }
-      return p;
-    }));
+      return updatedPatients;
+    });
   };
 
   const removeMedicineAssignment = (patientId: number, assignmentId: number): void => {
-    setPatients(prev => prev.map(p => {
-      if (p.id === patientId) {
-        return {
-          ...p,
-          assignedMedicines: p.assignedMedicines.filter(m => m.id !== assignmentId)
-        };
+    setPatients(prev => {
+      const updatedPatients = prev.map(p => {
+        if (p.id === patientId) {
+          return {
+            ...p,
+            assignedMedicines: p.assignedMedicines.filter(m => m.id !== assignmentId)
+          };
+        }
+        return p;
+      });
+      
+      // Save to localStorage immediately
+      if (LocalStorageService.isLocalStorageAvailable()) {
+        LocalStorageService.savePatients(updatedPatients);
       }
-      return p;
-    }));
+      return updatedPatients;
+    });
   };
 
-  const addNote = (patientId: number, noteContent: string): void => {
-    const newNote: Note = {
-      id: Date.now(),
-      content: noteContent,
-      createdAt: new Date().toLocaleString(),
-      updatedAt: new Date().toLocaleString()
-    };
-
-    setPatients(prev => prev.map(p => {
-      if (p.id === patientId) {
-        return {
-          ...p,
-          notes: [...(p.notes || []), newNote]
-        };
+  const updateHandwrittenNotes = (patientId: number, notesData: string): void => {
+    setPatients(prev => {
+      const updatedPatients = prev.map(p => {
+        if (p.id === patientId) {
+          return {
+            ...p,
+            handwrittenNotes: notesData
+          };
+        }
+        return p;
+      });
+      
+      // Save to localStorage immediately
+      if (LocalStorageService.isLocalStorageAvailable()) {
+        LocalStorageService.savePatients(updatedPatients);
       }
-      return p;
-    }));
-  };
-
-  const updateNote = (patientId: number, noteId: number, noteContent: string): void => {
-    setPatients(prev => prev.map(p => {
-      if (p.id === patientId) {
-        return {
-          ...p,
-          notes: p.notes.map(note => 
-            note.id === noteId 
-              ? { ...note, content: noteContent, updatedAt: new Date().toLocaleString() }
-              : note
-          )
-        };
-      }
-      return p;
-    }));
-  };
-
-  const deleteNote = (patientId: number, noteId: number): void => {
-    setPatients(prev => prev.map(p => {
-      if (p.id === patientId) {
-        return {
-          ...p,
-          notes: p.notes.filter(note => note.id !== noteId)
-        };
-      }
-      return p;
-    }));
+      return updatedPatients;
+    });
   };
 
   return {
@@ -120,9 +147,7 @@ const usePatients = (): UsePatientReturn => {
     deletePatient,
     assignMedicine,
     removeMedicineAssignment,
-    addNote,
-    updateNote,
-    deleteNote
+    updateHandwrittenNotes
   };
 };
 

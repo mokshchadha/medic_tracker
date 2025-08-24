@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { Patient, PatientFormData, PatientFormProps } from '@/types';
+import HandwrittenNotesCanvas from './HandwrittenNotesCanvas';
 
 const PatientForm: React.FC<PatientFormProps> = ({ 
   patient, 
@@ -15,9 +16,8 @@ const PatientForm: React.FC<PatientFormProps> = ({
       age: '',
       phone: '',
       address: '',
-      medicalHistory: '',
-      assignedMedicines: [],
-      notes: []
+      handwrittenNotes: '',
+      assignedMedicines: []
     }
   );
 
@@ -36,9 +36,13 @@ const PatientForm: React.FC<PatientFormProps> = ({
     }
   };
 
+  const handleNotesChange = (imageData: string) => {
+    setFormData({...formData, handwrittenNotes: imageData});
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[95vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg text-black font-semibold">
             {isEdit ? 'Edit Patient' : 'Add New Patient'}
@@ -48,77 +52,83 @@ const PatientForm: React.FC<PatientFormProps> = ({
           </button>
         </div>
         
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name *
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
-              placeholder="Patient name"
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Basic Info */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Name *
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
+                placeholder="Patient name"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Age *
+              </label>
+              <input
+                type="number"
+                value={formData.age}
+                onChange={(e) => setFormData({...formData, age: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
+                placeholder="Age"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phone
+              </label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
+                placeholder="Phone number"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Address
+              </label>
+              <textarea
+                value={formData.address}
+                onChange={(e) => setFormData({...formData, address: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
+                rows={3}
+                placeholder="Address"
+              />
+            </div>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Age *
-            </label>
-            <input
-              type="number"
-              value={formData.age}
-              onChange={(e) => setFormData({...formData, age: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
-              placeholder="Age"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone
-            </label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
-              placeholder="Phone number"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Address
-            </label>
-            <textarea
-              value={formData.address}
-              onChange={(e) => setFormData({...formData, address: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
-              rows={2}
-              placeholder="Address"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Medical History
-            </label>
-            <textarea
-              value={formData.medicalHistory}
-              onChange={(e) => setFormData({...formData, medicalHistory: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
-              rows={3}
-              placeholder="Medical history and notes"
-            />
+
+          {/* Right Column - Handwritten Notes */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Handwritten Notes
+              </label>
+              <HandwrittenNotesCanvas
+                value={formData.handwrittenNotes}
+                onChange={handleNotesChange}
+                width={400}
+                height={300}
+              />
+            </div>
           </div>
         </div>
         
-        <div className="flex space-x-3 mt-6">
+        <div className="flex space-x-3 mt-6 pt-4 border-t">
           <button
             onClick={handleSubmit}
-            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+            disabled={!formData.name || !formData.age}
+            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {isEdit ? 'Update' : 'Add'} Patient
           </button>

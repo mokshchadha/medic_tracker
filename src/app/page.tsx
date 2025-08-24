@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import usePatients from '../hooks/usePatient';
 import PatientCard from '@/components/PatientCard';
 import StatsCards from '@/components/StatsCard';
@@ -10,6 +10,7 @@ import PatientForm from '@/components/PatientForm';
 import NotesModal from '@/components/NotesModal';
 import MedicineAssignmentForm from '@/components/MedicineAssignmentForm';
 import MedicineForm from '@/components/MedicineForm';
+import LocalStorageService from '@/services/LocalStorageService';
 import { Patient, Medicine, PatientFormData } from '../types';
 
 const PatientManagementApp: React.FC = () => {
@@ -20,21 +21,37 @@ const PatientManagementApp: React.FC = () => {
     deletePatient,
     assignMedicine,
     removeMedicineAssignment,
-    addNote,
-    updateNote,
-    deleteNote
+    updateHandwrittenNotes
   } = usePatients();
 
-  const [medicines, setMedicines] = useState<Medicine[]>([
-    { id: 1, name: 'Paracetamol', defaultDosage: '500mg' },
-    { id: 2, name: 'Aspirin', defaultDosage: '75mg' },
-    { id: 3, name: 'Ibuprofen', defaultDosage: '400mg' },
-    { id: 4, name: 'Amoxicillin', defaultDosage: '250mg' },
-    { id: 5, name: 'Metformin', defaultDosage: '500mg' },
-    { id: 6, name: 'Lisinopril', defaultDosage: '10mg' },
-    { id: 7, name: 'Atorvastatin', defaultDosage: '20mg' },
-    { id: 8, name: 'Omeprazole', defaultDosage: '20mg' }
-  ]);
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
+
+  // Load medicines from localStorage on component mount
+  useEffect(() => {
+    if (LocalStorageService.isLocalStorageAvailable()) {
+      const savedMedicines = LocalStorageService.getMedicines();
+      setMedicines(savedMedicines);
+    } else {
+      // Fallback to default medicines if localStorage is not available
+      setMedicines([
+        { id: 1, name: 'Paracetamol', defaultDosage: '500mg' },
+        { id: 2, name: 'Aspirin', defaultDosage: '75mg' },
+        { id: 3, name: 'Ibuprofen', defaultDosage: '400mg' },
+        { id: 4, name: 'Amoxicillin', defaultDosage: '250mg' },
+        { id: 5, name: 'Metformin', defaultDosage: '500mg' },
+        { id: 6, name: 'Lisinopril', defaultDosage: '10mg' },
+        { id: 7, name: 'Atorvastatin', defaultDosage: '20mg' },
+        { id: 8, name: 'Omeprazole', defaultDosage: '20mg' }
+      ]);
+    }
+  }, []);
+
+  // Sync medicines to localStorage whenever medicines state changes
+  useEffect(() => {
+    if (LocalStorageService.isLocalStorageAvailable() && medicines.length > 0) {
+      LocalStorageService.saveMedicines(medicines);
+    }
+  }, [medicines]);
 
   // Modal states
   const [showAddPatient, setShowAddPatient] = useState<boolean>(false);
@@ -46,8 +63,28 @@ const PatientManagementApp: React.FC = () => {
 
   // Medicine handlers
   const addMedicine = (medicine: Medicine): void => {
-    setMedicines(prev => [...prev, medicine]);
+    setMedicines(prev => {
+      const updatedMedicines = [...prev, medicine];
+      // Save to localStorage immediately
+      if (LocalStorageService.isLocalStorageAvailable()) {
+        LocalStorageService.saveMedicines(updatedMedicines);
+      }
+      return updatedMedicines;
+    });
     setShowAddMedicine(false);
+  };
+
+  const deleteMedicine = (medicineId: number): void => {
+    if (window.confirm('Are you sure you want to delete this medicine? It will be removed from all patient prescriptions.')) {
+      setMedicines(prev => {
+        const updatedMedicines = prev.filter(m => m.id !== medicineId);
+        // Save to localStorage immediately
+        if (LocalStorageService.isLocalStorageAvailable()) {
+          LocalStorageService.saveMedicines(updatedMedicines);
+        }
+        return updatedMedicines;
+      });
+    }
   };
 
   const handleAssignMedicine = (
@@ -94,6 +131,37 @@ const PatientManagementApp: React.FC = () => {
     }
   };
 
+  const handleUpdateHandwrittenNotes = (patientId: number, notesData: string): void => {
+    updateHandwrittenNotes(patientId, notesData);
+  };
+
+  // Data management functions
+  const handleExportData = (): void => {
+    try {
+      const data = LocalStorageService.exportData();
+      const dataStr = JSON.stringify(data, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `medic-tracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      alert('Error exporting data: ' + error);
+    }
+  };
+
+  const handleClearAllData = (): void => {
+    if (window.confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+      LocalStorageService.clearAllData();
+      window.location.reload(); // Refresh to reset all state
+    }
+  };
+
+  // Calculate stats for handwritten notes
+  const patientsWithNotes = patients.filter(p => p.handwrittenNotes).length;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -103,6 +171,30 @@ const PatientManagementApp: React.FC = () => {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Data Management Section */}
+        {LocalStorageService.isLocalStorageAvailable() && (
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Data Management</h3>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleExportData}
+                className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-md hover:bg-blue-200"
+              >
+                Export Data
+              </button>
+              <button
+                onClick={handleClearAllData}
+                className="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-md hover:bg-red-200"
+              >
+                Clear All Data
+              </button>
+              <div className="text-xs text-gray-500 self-center">
+                Data is automatically saved to your browser • {patientsWithNotes} patients have handwritten notes
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <StatsCards patients={patients} medicines={medicines} />
 
@@ -156,9 +248,7 @@ const PatientManagementApp: React.FC = () => {
         <NotesModal
           patient={selectedPatientForNotes}
           onClose={handleCloseNotesModal}
-          onAddNote={addNote}
-          onUpdateNote={updateNote}
-          onDeleteNote={deleteNote}
+          onUpdateHandwrittenNotes={handleUpdateHandwrittenNotes}
         />
       )}
 

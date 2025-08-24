@@ -15,22 +15,14 @@ export interface MedicineAssignment {
   assignedDate: string;
 }
 
-export interface Note {
-  id: number | null;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface Patient {
   id: number;
   name: string;
   age: string;
   phone?: string;
   address?: string;
-  medicalHistory?: string;
+  handwrittenNotes?: string; // Base64 encoded canvas image data
   assignedMedicines: MedicineAssignment[];
-  notes: Note[];
   createdAt: string;
 }
 
@@ -39,9 +31,8 @@ export interface PatientFormData {
   age: string;
   phone?: string;
   address?: string;
-  medicalHistory?: string;
+  handwrittenNotes?: string;
   assignedMedicines: MedicineAssignment[];
-  notes: Note[];
 }
 
 export interface NewMedicineData {
@@ -81,9 +72,7 @@ export interface MedicineAssignmentFormProps {
 export interface NotesModalProps {
   patient: Patient;
   onClose: () => void;
-  onAddNote: (patientId: number, content: string) => void;
-  onUpdateNote: (patientId: number, noteId: number, content: string) => void;
-  onDeleteNote: (patientId: number, noteId: number) => void;
+  onUpdateHandwrittenNotes: (patientId: number, notesData: string) => void;
 }
 
 export interface HeaderProps {
@@ -108,7 +97,5 @@ export interface UsePatientReturn {
   deletePatient: (patientId: number) => void;
   assignMedicine: (patientId: number, medicineId: number, medicines: Medicine[], dosage: string, timing: string) => void;
   removeMedicineAssignment: (patientId: number, assignmentId: number) => void;
-  addNote: (patientId: number, content: string) => void;
-  updateNote: (patientId: number, noteId: number, content: string) => void;
-  deleteNote: (patientId: number, noteId: number) => void;
+  updateHandwrittenNotes: (patientId: number, notesData: string) => void;
 }
