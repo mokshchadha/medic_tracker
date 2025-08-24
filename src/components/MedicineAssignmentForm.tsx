@@ -1,4 +1,3 @@
-
 // components/MedicineAssignmentForm.tsx
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
@@ -43,7 +42,7 @@ const MedicineAssignmentForm: React.FC<MedicineAssignmentFormProps> = ({
                 const medicine = medicines.find(m => m.id === parseInt(e.target.value));
                 if (medicine) setDosage(medicine.defaultDosage);
               }}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
             >
               <option value="">Select a medicine</option>
               {medicines.map(medicine => (
@@ -62,7 +61,7 @@ const MedicineAssignmentForm: React.FC<MedicineAssignmentFormProps> = ({
               type="text"
               value={dosage}
               onChange={(e) => setDosage(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
               placeholder="e.g., 500mg"
             />
           </div>
@@ -75,7 +74,7 @@ const MedicineAssignmentForm: React.FC<MedicineAssignmentFormProps> = ({
               type="text"
               value={timing}
               onChange={(e) => setTiming(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
               placeholder="e.g., Twice daily after meals"
             />
           </div>
@@ -100,4 +99,4 @@ const MedicineAssignmentForm: React.FC<MedicineAssignmentFormProps> = ({
   );
 };
 
-export default MedicineAssignmentForm
+export default MedicineAssignmentForm;

@@ -25,9 +25,17 @@ const PatientManagementApp: React.FC = () => {
   } = usePatients();
 
   const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [isClient, setIsClient] = useState(false);
 
-  // Load medicines from localStorage on component mount
+  // Set client-side flag
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Load medicines from localStorage on component mount (client-side only)
+  useEffect(() => {
+    if (!isClient) return;
+
     if (LocalStorageService.isLocalStorageAvailable()) {
       const savedMedicines = LocalStorageService.getMedicines();
       setMedicines(savedMedicines);
@@ -44,14 +52,16 @@ const PatientManagementApp: React.FC = () => {
         { id: 8, name: 'Omeprazole', defaultDosage: '20mg' }
       ]);
     }
-  }, []);
+  }, [isClient]);
 
-  // Sync medicines to localStorage whenever medicines state changes
+  // Sync medicines to localStorage whenever medicines state changes (client-side only)
   useEffect(() => {
-    if (LocalStorageService.isLocalStorageAvailable() && medicines.length > 0) {
+    if (!isClient || medicines.length === 0) return;
+
+    if (LocalStorageService.isLocalStorageAvailable()) {
       LocalStorageService.saveMedicines(medicines);
     }
-  }, [medicines]);
+  }, [medicines, isClient]);
 
   // Modal states
   const [showAddPatient, setShowAddPatient] = useState<boolean>(false);
@@ -115,8 +125,8 @@ const PatientManagementApp: React.FC = () => {
     setSelectedPatientForNotes(null);
   };
 
-  const handleAddPatient = (patientData: PatientFormData): void => {
-    addPatient(patientData);
+  const handleAddPatient = (patient: Patient): void => {
+    addPatient(patient);
     setShowAddPatient(false);
   };
 
@@ -172,7 +182,7 @@ const PatientManagementApp: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Data Management Section */}
-        {LocalStorageService.isLocalStorageAvailable() && (
+        {isClient && LocalStorageService.isLocalStorageAvailable() && (
           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
             <h3 className="text-sm font-medium text-gray-700 mb-3">Data Management</h3>
             <div className="flex flex-wrap gap-2">

@@ -5,33 +5,37 @@ import LocalStorageService from '../services/LocalStorageService';
 
 const usePatients = (): UsePatientReturn => {
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [isClient, setIsClient] = useState(false);
 
-  // Load patients from localStorage on component mount
+  // Set client-side flag
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Load patients from localStorage on component mount (client-side only)
+  useEffect(() => {
+    if (!isClient) return;
+
     if (LocalStorageService.isLocalStorageAvailable()) {
       const savedPatients = LocalStorageService.getPatients();
       setPatients(savedPatients);
     }
-  }, []);
+  }, [isClient]);
 
-  // Sync patients to localStorage whenever patients state changes
+  // Sync patients to localStorage whenever patients state changes (client-side only)
   useEffect(() => {
-    if (LocalStorageService.isLocalStorageAvailable() && patients.length >= 0) {
+    if (!isClient) return;
+
+    if (LocalStorageService.isLocalStorageAvailable()) {
       LocalStorageService.savePatients(patients);
     }
-  }, [patients]);
+  }, [patients, isClient]);
 
-  const addPatient = (patientData: PatientFormData): void => {
-    const newPatient: Patient = {
-      id: Date.now(),
-      ...patientData,
-      createdAt: new Date().toLocaleDateString()
-    };
-    
+  const addPatient = (newPatient: Patient): void => {
     setPatients(prev => {
       const updatedPatients = [...prev, newPatient];
-      // Save to localStorage immediately
-      if (LocalStorageService.isLocalStorageAvailable()) {
+      // Save to localStorage immediately (client-side only)
+      if (isClient && LocalStorageService.isLocalStorageAvailable()) {
         LocalStorageService.savePatients(updatedPatients);
       }
       return updatedPatients;
@@ -43,8 +47,8 @@ const usePatients = (): UsePatientReturn => {
       const updatedPatients = prev.map(p => 
         p.id === updatedPatient.id ? updatedPatient : p
       );
-      // Save to localStorage immediately
-      if (LocalStorageService.isLocalStorageAvailable()) {
+      // Save to localStorage immediately (client-side only)
+      if (isClient && LocalStorageService.isLocalStorageAvailable()) {
         LocalStorageService.savePatients(updatedPatients);
       }
       return updatedPatients;
@@ -54,8 +58,8 @@ const usePatients = (): UsePatientReturn => {
   const deletePatient = (patientId: number): void => {
     setPatients(prev => {
       const updatedPatients = prev.filter(p => p.id !== patientId);
-      // Save to localStorage immediately
-      if (LocalStorageService.isLocalStorageAvailable()) {
+      // Save to localStorage immediately (client-side only)
+      if (isClient && LocalStorageService.isLocalStorageAvailable()) {
         LocalStorageService.savePatients(updatedPatients);
       }
       return updatedPatients;
@@ -92,8 +96,8 @@ const usePatients = (): UsePatientReturn => {
         return p;
       });
       
-      // Save to localStorage immediately
-      if (LocalStorageService.isLocalStorageAvailable()) {
+      // Save to localStorage immediately (client-side only)
+      if (isClient && LocalStorageService.isLocalStorageAvailable()) {
         LocalStorageService.savePatients(updatedPatients);
       }
       return updatedPatients;
@@ -112,8 +116,8 @@ const usePatients = (): UsePatientReturn => {
         return p;
       });
       
-      // Save to localStorage immediately
-      if (LocalStorageService.isLocalStorageAvailable()) {
+      // Save to localStorage immediately (client-side only)
+      if (isClient && LocalStorageService.isLocalStorageAvailable()) {
         LocalStorageService.savePatients(updatedPatients);
       }
       return updatedPatients;
@@ -132,8 +136,8 @@ const usePatients = (): UsePatientReturn => {
         return p;
       });
       
-      // Save to localStorage immediately
-      if (LocalStorageService.isLocalStorageAvailable()) {
+      // Save to localStorage immediately (client-side only)
+      if (isClient && LocalStorageService.isLocalStorageAvailable()) {
         LocalStorageService.savePatients(updatedPatients);
       }
       return updatedPatients;

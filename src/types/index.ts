@@ -52,7 +52,7 @@ export interface PatientCardProps {
 
 export interface PatientFormProps {
   patient?: Patient;
-  onSave: (patient: Patient | PatientFormData) => void;
+  onSave: (patient: Patient) => void;
   onCancel: () => void;
   isEdit?: boolean;
 }
@@ -92,7 +92,7 @@ export interface StatsCardsProps {
 // Hook return types
 export interface UsePatientReturn {
   patients: Patient[];
-  addPatient: (patient: PatientFormData) => void;
+  addPatient: (patient: Patient) => void;
   updatePatient: (patient: Patient) => void;
   deletePatient: (patientId: number) => void;
   assignMedicine: (patientId: number, medicineId: number, medicines: Medicine[], dosage: string, timing: string) => void;

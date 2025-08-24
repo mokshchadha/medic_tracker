@@ -24,11 +24,14 @@ const PatientForm: React.FC<PatientFormProps> = ({
   const handleSubmit = () => {
     if (formData.name && formData.age) {
       if (isEdit) {
-        onSave(formData);
+        // For editing, formData should already be a Patient with id and createdAt
+        onSave(formData as Patient);
       } else {
-        const newPatient = {
+        // For new patients, create the full Patient object
+        const newPatient: Patient = {
           id: Date.now(),
           ...formData,
+          assignedMedicines: formData.assignedMedicines || [],
           createdAt: new Date().toLocaleDateString()
         };
         onSave(newPatient);

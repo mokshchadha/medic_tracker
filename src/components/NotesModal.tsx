@@ -90,14 +90,14 @@ const NotesModal: React.FC<NotesModalProps> = ({
                     style={{ maxHeight: '400px' }}
                   />
                   <p className="text-sm text-gray-500 mt-2">
-                    Click "Edit Notes" to modify the handwritten notes
+                    Click &ldquo;Edit Notes&ldquo; to modify the handwritten notes
                   </p>
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500">
                   <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                   <p className="text-sm">No handwritten notes yet</p>
-                  <p className="text-xs mt-1">Click "Edit Notes" to start drawing</p>
+                  <p className="text-xs mt-1">Click &ldquo;Edit Notes&ldquo; to start drawing</p>
                 </div>
               )}
             </div>

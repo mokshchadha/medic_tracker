@@ -7,6 +7,10 @@ class LocalStorageService {
 
   // Patient methods
   static getPatients(): Patient[] {
+    if (typeof window === 'undefined') {
+      return [];
+    }
+
     try {
       const patientsJson = localStorage.getItem(this.PATIENTS_KEY);
       return patientsJson ? JSON.parse(patientsJson) : [];
@@ -17,6 +21,10 @@ class LocalStorageService {
   }
 
   static savePatients(patients: Patient[]): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       localStorage.setItem(this.PATIENTS_KEY, JSON.stringify(patients));
     } catch (error) {
@@ -46,6 +54,10 @@ class LocalStorageService {
 
   // Medicine methods
   static getMedicines(): Medicine[] {
+    if (typeof window === 'undefined') {
+      return this.getDefaultMedicines();
+    }
+
     try {
       const medicinesJson = localStorage.getItem(this.MEDICINES_KEY);
       return medicinesJson ? JSON.parse(medicinesJson) : this.getDefaultMedicines();
@@ -56,6 +68,10 @@ class LocalStorageService {
   }
 
   static saveMedicines(medicines: Medicine[]): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       localStorage.setItem(this.MEDICINES_KEY, JSON.stringify(medicines));
     } catch (error) {
@@ -88,13 +104,27 @@ class LocalStorageService {
       { id: 8, name: 'Omeprazole', defaultDosage: '20mg' }
     ];
     
-    // Save default medicines to localStorage if not already saved
-    this.saveMedicines(defaultMedicines);
+    // Save default medicines to localStorage if in browser and not already saved
+    if (typeof window !== 'undefined') {
+      try {
+        const existing = localStorage.getItem(this.MEDICINES_KEY);
+        if (!existing) {
+          this.saveMedicines(defaultMedicines);
+        }
+      } catch (error) {
+        console.error('Error saving default medicines:', error);
+      }
+    }
+    
     return defaultMedicines;
   }
 
   // Utility methods
   static clearAllData(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       localStorage.removeItem(this.PATIENTS_KEY);
       localStorage.removeItem(this.MEDICINES_KEY);
@@ -111,6 +141,10 @@ class LocalStorageService {
   }
 
   static importData(data: { patients: Patient[]; medicines: Medicine[] }): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       if (data.patients) {
         this.savePatients(data.patients);
@@ -125,6 +159,11 @@ class LocalStorageService {
 
   // Check if localStorage is available
   static isLocalStorageAvailable(): boolean {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
     try {
       const test = '__localStorage_test__';
       localStorage.setItem(test, test);
