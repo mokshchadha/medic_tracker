@@ -1,3 +1,4 @@
+// src/app/page.tsx
 'use client'
 
 import React, { useState, useEffect } from 'react';
@@ -11,7 +12,7 @@ import NotesModal from '@/components/NotesModal';
 import MedicineAssignmentForm from '@/components/MedicineAssignmentForm';
 import MedicineForm from '@/components/MedicineForm';
 import LocalStorageService from '@/services/LocalStorageService';
-import { Patient, Medicine, PatientFormData } from '../types';
+import { Patient, Medicine } from '../types';
 
 const PatientManagementApp: React.FC = () => {
   const {

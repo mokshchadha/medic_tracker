@@ -19,6 +19,12 @@ export interface Patient {
   id: number;
   name: string;
   age: string;
+  sex: 'male' | 'female' | 'other' | '';
+  dateOfAdmission: string;
+  diagnosis: string;
+  targetSymptoms: string;
+  currentTreatment: string;
+  additionalTreatment: string;
   phone?: string;
   address?: string;
   handwrittenNotes?: string; // Base64 encoded canvas image data
@@ -29,6 +35,12 @@ export interface Patient {
 export interface PatientFormData {
   name: string;
   age: string;
+  sex: 'male' | 'female' | 'other' | '';
+  dateOfAdmission: string;
+  diagnosis: string;
+  targetSymptoms: string;
+  currentTreatment: string;
+  additionalTreatment: string;
   phone?: string;
   address?: string;
   handwrittenNotes?: string;
