@@ -23,7 +23,7 @@ const MedicineForm: React.FC<MedicineFormProps> = ({ onSave, onCancel })  => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Add New Medicine</h3>
+          <h3 className="text-black text-lg font-semibold">Add New Medicine</h3>
           <button onClick={onCancel} className="text-gray-500">
             <X className="w-5 h-5" />
           </button>
@@ -31,27 +31,27 @@ const MedicineForm: React.FC<MedicineFormProps> = ({ onSave, onCancel })  => {
         
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-black mb-1">
               Medicine Name
             </label>
             <input
               type="text"
               value={newMedicine.name}
               onChange={(e) => setNewMedicine({...newMedicine, name: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
               placeholder="Medicine name"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-black mb-1">
               Default Dosage
             </label>
             <input
               type="text"
               value={newMedicine.defaultDosage}
               onChange={(e) => setNewMedicine({...newMedicine, defaultDosage: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className="w-full p-2 border border-gray-300 rounded-md text-black placeholder-gray-500"
               placeholder="e.g., 500mg"
             />
           </div>
