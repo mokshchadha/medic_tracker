@@ -12,7 +12,34 @@ import NotesModal from '@/components/NotesModal';
 import MedicineAssignmentForm from '@/components/MedicineAssignmentForm';
 import MedicineForm from '@/components/MedicineForm';
 import LocalStorageService from '@/services/LocalStorageService';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Patient, Medicine } from '../types';
+
+// Loading component for authentication check
+const LoadingScreen: React.FC = () => (
+  <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="text-center">
+      <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-gray-600">Loading...</p>
+    </div>
+  </div>
+);
+
+// Main app content component
+const AppContent: React.FC = () => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (!isAuthenticated) {
+    // This shouldn't happen due to middleware, but just in case
+    return <LoadingScreen />;
+  }
+
+  return <PatientManagementApp />;
+};
 
 const PatientManagementApp: React.FC = () => {
   const {
@@ -273,4 +300,13 @@ const PatientManagementApp: React.FC = () => {
   );
 };
 
-export default PatientManagementApp;
+// Main exported component with AuthProvider wrapper
+const MainApp: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+};
+
+export default MainApp;
