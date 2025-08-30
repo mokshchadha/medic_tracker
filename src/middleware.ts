@@ -1,6 +1,5 @@
-// middleware.ts
+// src/middleware.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthService } from '@/services/AuthService';
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -42,32 +41,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Validate session
-  const validation = AuthService.validateSession(sessionId);
-  console.log(`[Middleware] Session validation result:`, validation);
+  // Session validation will happen in the AuthContext and API routes
+  // Middleware just checks for presence of session cookie
+  console.log(`[Middleware] Session ID present, allowing access`);
 
-  if (!validation.valid) {
-    console.log(`[Middleware] Invalid session, clearing cookie and redirecting to login`);
-    const loginUrl = new URL('/login', request.url);
-    const response = NextResponse.redirect(loginUrl);
-    
-    response.cookies.set('sessionId', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 0,
-      path: '/'
-    });
-
-    return response;
-  }
-
-  console.log(`[Middleware] Valid session for user: ${validation.username}`);
-
-  // Add user info to request headers for use in API routes
+  // Add session ID to request headers for API routes to use
   const response = NextResponse.next();
-  response.headers.set('X-User-ID', validation.userId?.toString() || '');
-  response.headers.set('X-Username', validation.username || '');
+  response.headers.set('X-Session-ID', sessionId);
 
   return response;
 }

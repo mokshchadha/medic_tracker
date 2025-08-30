@@ -1,3 +1,4 @@
+// src/app/api/auth/check/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/services/AuthService';
 
@@ -12,7 +13,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const validation = AuthService.validateSession(sessionId);
+    // Use the updated AuthService that validates sessions from MongoDB
+    const validation = await AuthService.validateSession(sessionId);
 
     if (!validation.valid) {
       const response = NextResponse.json(
@@ -20,6 +22,7 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
       
+      // Clear the invalid session cookie
       response.cookies.set('sessionId', '', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

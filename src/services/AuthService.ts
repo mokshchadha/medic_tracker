@@ -1,114 +1,113 @@
-// services/AuthService.ts
+// src/services/AuthService.ts
 import { getUserByCredentials } from '@/lib/usersData';
+import dbConnect from '@/lib/mongodb';
 
-interface Session {
-  sessionId: string;
-  username: string;
-  userId: number;
-  createdAt: number;
-}
+// Lazy import Session model to avoid issues during middleware compilation
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let SessionModel: any = null;
+
+const getSessionModel = async () => {
+  if (!SessionModel) {
+    const { default: Session } = await import('@/models/Session');
+    SessionModel = Session;
+  }
+  return SessionModel;
+};
 
 export class AuthService {
-  private static sessions: Map<string, Session> = new Map();
   private static readonly SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
-  static authenticate(username: string, password: string): { success: boolean; sessionId?: string; username?: string; error?: string } {
+  static async authenticate(username: string, password: string): Promise<{ success: boolean; sessionId?: string; username?: string; error?: string }> {
     const user = getUserByCredentials(username, password);
 
     if (!user) {
       return { success: false, error: 'Invalid username or password' };
     }
 
-    const sessionId = crypto.randomUUID();
-    const session: Session = {
-      sessionId,
-      username: user.username,
-      userId: user.id,
-      createdAt: Date.now()
-    };
+    try {
+      await dbConnect();
+      const Session = await getSessionModel();
+      
+      const sessionId = crypto.randomUUID();
+      const expiresAt = new Date(Date.now() + this.SESSION_DURATION);
 
-    this.sessions.set(sessionId, session);
-    console.log(`User ${username} logged in with session ${sessionId}`);
+      await Session.create({
+        sessionId,
+        username: user.username,
+        userId: user.id,
+        expiresAt
+      });
 
-    return {
-      success: true,
-      sessionId,
-      username: user.username
-    };
+      console.log(`User ${username} logged in with session ${sessionId}`);
+
+      return {
+        success: true,
+        sessionId,
+        username: user.username
+      };
+    } catch (error) {
+      console.error('Session creation error:', error);
+      return { success: false, error: 'Authentication failed' };
+    }
   }
 
-  static validateSession(sessionId: string): { valid: boolean; username?: string; userId?: number } {
+  static async validateSession(sessionId: string): Promise<{ valid: boolean; username?: string; userId?: number }> {
     if (!sessionId) {
       return { valid: false };
     }
 
-    const session = this.sessions.get(sessionId);
-    
-    if (!session) {
-      console.log(`Session ${sessionId} not found`);
+    try {
+      await dbConnect();
+      const Session = await getSessionModel();
+      
+      const session = await Session.findOne({
+        sessionId,
+        expiresAt: { $gt: new Date() } // Only get non-expired sessions
+      });
+
+      if (!session) {
+        console.log(`Session ${sessionId} not found or expired`);
+        return { valid: false };
+      }
+
+      console.log(`Session ${sessionId} is valid for user ${session.username}`);
+      return {
+        valid: true,
+        username: session.username,
+        userId: session.userId
+      };
+    } catch (error) {
+      console.error('Session validation error:', error);
       return { valid: false };
     }
+  }
 
-    const sessionAge = Date.now() - session.createdAt;
+  static async logout(sessionId: string): Promise<void> {
+    if (!sessionId) return;
 
-    if (sessionAge > this.SESSION_DURATION) {
-      console.log(`Session ${sessionId} expired`);
-      this.sessions.delete(sessionId);
-      return { valid: false };
+    try {
+      await dbConnect();
+      const Session = await getSessionModel();
+      await Session.deleteOne({ sessionId });
+      console.log(`Session ${sessionId} logged out and deleted`);
+    } catch (error) {
+      console.error('Logout error:', error);
     }
-
-    console.log(`Session ${sessionId} is valid for user ${session.username}`);
-    return {
-      valid: true,
-      username: session.username,
-      userId: session.userId
-    };
   }
 
-  static logout(sessionId: string): void {
-    console.log(`Logging out session ${sessionId}`);
-    this.sessions.delete(sessionId);
-  }
-
-  static cleanupExpiredSessions(): void {
-    const now = Date.now();
-    let cleanedCount = 0;
-
-    for (const [sessionId, session] of this.sessions.entries()) {
-      if (now - session.createdAt > this.SESSION_DURATION) {
-        this.sessions.delete(sessionId);
-        cleanedCount++;
+  static async cleanupExpiredSessions(): Promise<void> {
+    try {
+      await dbConnect();
+      const Session = await getSessionModel();
+      const result = await Session.deleteMany({
+        expiresAt: { $lt: new Date() }
+      });
+      
+      if (result.deletedCount > 0) {
+        console.log(`Cleaned up ${result.deletedCount} expired sessions`);
       }
+    } catch (error) {
+      console.error('Session cleanup error:', error);
     }
-
-    if (cleanedCount > 0) {
-      console.log(`Cleaned up ${cleanedCount} expired sessions`);
-    }
-  }
-
-  static getActiveSessions(): number {
-    this.cleanupExpiredSessions();
-    return this.sessions.size;
-  }
-
-  static hasActiveSession(username: string): boolean {
-    for (const session of this.sessions.values()) {
-      if (session.username === username) {
-        const sessionAge = Date.now() - session.createdAt;
-        if (sessionAge <= this.SESSION_DURATION) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  // Debug method to list all active sessions
-  static debugSessions(): void {
-    console.log('Active sessions:', Array.from(this.sessions.values()).map(s => ({
-      sessionId: s.sessionId,
-      username: s.username,
-      age: Date.now() - s.createdAt
-    })));
   }
 }

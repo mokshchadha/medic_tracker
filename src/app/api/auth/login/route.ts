@@ -1,3 +1,4 @@
+// src/app/api/auth/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/services/AuthService';
 
@@ -12,7 +13,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = AuthService.authenticate(username, password);
+    // Use the updated AuthService that stores sessions in MongoDB
+    const result = await AuthService.authenticate(username, password);
 
     if (!result.success) {
       return NextResponse.json(
@@ -26,11 +28,12 @@ export async function POST(request: NextRequest) {
       username: result.username
     });
 
+    // Set the session cookie with the sessionId from MongoDB
     response.cookies.set('sessionId', result.sessionId!, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 60 * 60 * 24,
+      maxAge: 60 * 60 * 24, // 24 hours
       path: '/'
     });
 
